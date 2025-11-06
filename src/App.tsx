@@ -6,6 +6,7 @@ function App() {
 
   return (
     <>
+    
       <BrowserRouter> 
       <Routes>
         <Route path="/produtos" element={ <Produtos /> } />
