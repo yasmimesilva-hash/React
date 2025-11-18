@@ -1,16 +1,12 @@
 import './Produtos.css';
-import choc_belga from '../../assets/imgs/choc-belga.png';
-import choc_ninho from '../../assets/imgs/choc-ninho-morango.png';
-import cenoura_choc from '../../assets/imgs/cenoura-choc.png';
-import choc_ninho_morango from '../../assets/imgs/choc-ninho-morango.png';
-import choc_pistache from '../../assets/imgs/choc-pistache.png';
-import choc_oreo from '../../assets/imgs/choc-oreo.png';
 import whatsapp from '../../assets/imgs/whatsapp.png';
 import { useEffect, useState } from 'react';
 import type { Bolo } from '../../types/Bolo';
 import { getBolos } from '../../services/bolosServices';
 import CardProduto from '../../components/cardProduto/cardProduto';
 import Carrossel from '../../components/Carrossel/Carrossel';
+import Header from '../../components/Header/Header';
+import { useLocation } from 'react-router-dom';
 
 
 
@@ -19,12 +15,26 @@ import Carrossel from '../../components/Carrossel/Carrossel';
 export default function Produtos() {
 
     const [bolos, setBolos] = useState<Bolo[]>([]);
+    const location = useLocation();
+
+    const parametrosPesquisados = new URLSearchParams(location.search);
+    const termo_pesquisado = parametrosPesquisados.get('query');
 
     const fetchBolos = async () => {
         try {
             const dados = await getBolos();
-            console.log("dados retornados da API:", dados)
-            setBolos(dados);
+            if (termo_pesquisado) {
+                const dados_filtrados =  dados.filter(b =>
+                 b.nome.toLowerCase() .includes(termo_pesquisado.toLowerCase()) ||
+                 b.descricao.toLowerCase().includes(termo_pesquisado.toLowerCase()) ||
+                 b.categorias.some(cat => cat.toLowerCase().includes(termo_pesquisado.
+                toLowerCase()))
+            )
+              setBolos(dados_filtrados)  
+            } else {
+                console.log("dados retornados da API:", dados)
+                setBolos(dados);
+            }
         } catch (error) {
             console.error("erro ao executar getBolos:", error)
         }
@@ -33,16 +43,25 @@ export default function Produtos() {
 
     useEffect(() => {
         fetchBolos();
-    }, [])
+        console.log("termo pesquisado:" , termo_pesquisado)
+    }, [termo_pesquisado])
 
 
     return (
+        <>
+        <Header />
         <main>
             <Carrossel />
             <section className="container_produtos">
                 <h1 className="acessivel">produtos de chocolate</h1>
                 <div className="titulo">
-                    <span>Chocolate</span>
+                    <span>
+                     {
+                        termo_pesquisado ? `Resultados para: ${termo_pesquisado}`:
+                     "Nome da Categoria"
+
+                     }
+                   </span>
                     <hr />
                 </div>
 
@@ -59,12 +78,6 @@ export default function Produtos() {
                             />
                         ))
                     }
-                    <div className="card_produtos">
-                        <img src={choc_belga} alt="Uma fatia de bolo de chocolate belga" />
-                        <h2>Chocolate Belga</h2>
-                        <p>Bolo macio de chocolate, aplicado granulado que traz crocância e um sabor irresistível.</p>
-                        <span>R$ 80,00/kg.</span>
-                    </div>
                 </section>
             </section>
 
@@ -73,6 +86,7 @@ export default function Produtos() {
                 <img src={whatsapp} alt="icone do whatsapp" />
             </a>
         </main>
+        </>
 
     )
 }
